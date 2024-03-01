@@ -32,6 +32,7 @@ def download_img(img_url: str, img_name: str):
 
 if __name__ == "__main__":
     driver: TinderDriver = TinderDriver()
+    driver.start()
 
     print("8==========D~")
 
@@ -58,6 +59,8 @@ if __name__ == "__main__":
             driver.close_profile()
         elif user_in == "nope":
             driver.nope()
+        elif user_in == "like":
+            driver.like()
         elif user_in == "next_photo":
             driver.next_photo()
 

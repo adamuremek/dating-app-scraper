@@ -17,42 +17,44 @@ from selenium.webdriver.common.action_chains import ActionChains
 from urllib.parse import unquote
 
 class TinderDriver:
+    __icon_map: dict = {
+        "pets" : "Pets",
+        "drink_of_choice" : "Drinking",
+        "smoking" : "Smoking",
+        "420" : "Cannabis",
+        "workout" : "Workout",
+        "appetite" : "Dietary Preference",
+        "social_media" : "Social Media",
+        "sleeping_habits" : "Sleeping Habits",
+        "astrological_sign" : "Zodiac",
+        "education" : "Education",
+        "kids" : "Family Plans",
+        "covid_comfort" : "COVID Vaccine",
+        "mbti" : "Personality Type",
+        "communication_style" : "Communication Style",
+        "love_language" : "Love Style"
+    }
+
+    #SVG hashcodes being mapped to the topic the SVG icons represent
+    #IMPORTANT!!! If the SVG icons for basic info change, these hashcodes must be updated
+    __svg_hash_map: dict = {
+        "056c95d622b5e9e7860a5005fce51dd5916bfec61610c191715a1e4f64442754" : "Job Title",
+        "91f462a99539d7764f68b6d7415d8c26798ca2b93fa3ef202be772effcdbab44" : "Height",
+        "e53eb5454a3fcc0bd7b90c55f0d236ed31c7171b67113e6b698464b2c5f92ae8" : "School",
+        "d5bf2c89f2bb55dfe9c52ed7a22d316eb1d1e8c0a80064ba4a316bfb49af3d3b" : "Living In",
+        "33e98e451e5b457d5b9fa697f53b849b2516d5167e0e9e9e23fd4422fb5ed5bc" : "Distance From Me",
+        "5529bb33506f1f908d4b995ea60c4f539415a7f4bd37e9da42330bc535c745c9" : "Gender"
+    }
+
+    __home_url = "https://tinder.com/"
+    
     def __init__(self) -> None:
         #Scope level constants
         webdriver_path = "geckodriver.exe"
         firefox_bin_path = "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
         profile_path = "C:\\Users\\aruem\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\7czmkvtf.default-release"
 
-        url = "https://tinder.com/app/recs"
-
-        self.__icon_map: dict = {
-            "pets" : "Pets",
-            "drink_of_choice" : "Drinking",
-            "smoking" : "Smoking",
-            "420" : "Cannabis",
-            "workout" : "Workout",
-            "appetite" : "Dietary Preference",
-            "social_media" : "Social Media",
-            "sleeping_habits" : "Sleeping Habits",
-            "astrological_sign" : "Zodiac",
-            "education" : "Education",
-            "kids" : "Family Plans",
-            "covid_comfort" : "COVID Vaccine",
-            "mbti" : "Personality Type",
-            "communication_style" : "Communication Style",
-            "love_language" : "Love Style"
-        }
-
-        #SVG hashcodes being mapped to the topic the SVG icons represent
-        #IMPORTANT!!! If the SVG icons for basic info change, these hashcodes must be updated
-        self.__svg_hash_map: dict = {
-            "056c95d622b5e9e7860a5005fce51dd5916bfec61610c191715a1e4f64442754" : "Job Title",
-            "91f462a99539d7764f68b6d7415d8c26798ca2b93fa3ef202be772effcdbab44" : "Height",
-            "e53eb5454a3fcc0bd7b90c55f0d236ed31c7171b67113e6b698464b2c5f92ae8" : "School",
-            "d5bf2c89f2bb55dfe9c52ed7a22d316eb1d1e8c0a80064ba4a316bfb49af3d3b" : "Living In",
-            "33e98e451e5b457d5b9fa697f53b849b2516d5167e0e9e9e23fd4422fb5ed5bc" : "Distance From Me",
-            "5529bb33506f1f908d4b995ea60c4f539415a7f4bd37e9da42330bc535c745c9" : "Gender"
-        }
+        
 
         #Configure Firefox options and driver
         firefox_options = Options()
@@ -65,10 +67,9 @@ class TinderDriver:
         self.driver = webdriver.Firefox(service=service, options=firefox_options)
         self.driver.set_window_size(1000, 1000)
 
-        #Load tinder page
-        self.driver.get(url)
 
         self.profile_is_open = False
+        self.logged_in = False
     
     def __get_list_data(self, src_header: str, start_at_sibling_child: bool=False) -> list:
         element_list: list = []
@@ -133,7 +134,7 @@ class TinderDriver:
 
             if is_match:
                 icon_type = is_match.group(1)
-                element_dict[self.__icon_map[icon_type]] = child.text
+                element_dict[TinderDriver.__icon_map[icon_type]] = child.text
             else:
                 raise Exception(f"Error: Icon with url '{src_url} does not match provided pattern!'")
 
@@ -193,7 +194,7 @@ class TinderDriver:
             svg_hashcode = hashobj.hexdigest()
             
             #Store data in result
-            info_dict[self.__svg_hash_map[svg_hashcode]] = content_element.text
+            info_dict[TinderDriver.__svg_hash_map[svg_hashcode]] = content_element.text
 
         return info_dict
     
@@ -293,9 +294,19 @@ class TinderDriver:
         else:
             return ""
             
+
+    def start(self) -> None:
+        #Load tinder page
+        print("Tinder driver is starting up...")
+        self.driver.get(TinderDriver.__home_url)
+        print("Tinder driver has started!")
     
     def quit(self) -> None:
+        print("Tinder driver shutting down...")
         self.driver.quit()
+        print("Tinder driver shut down!")
+
+    
 
     def open_profile(self) -> None:
         self.__run_key_action(Keys.ARROW_UP)
@@ -314,5 +325,11 @@ class TinderDriver:
     def nope(self) -> None:
         self.__run_key_action(Keys.ARROW_LEFT)
         self.__simulate_pause()
+
+    def like(self) -> None:
+        self.__run_key_action(Keys.ARROW_RIGHT)
+        self.__simulate_pause()
+
+    
 
         

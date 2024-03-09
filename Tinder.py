@@ -4,7 +4,6 @@ import time
 import requests
 import json
 import random
-import pyautogui
 import xml.etree.ElementTree as ET
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -14,6 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.remote.webelement import WebElement
 from urllib.parse import unquote
 
 class TinderDriver:
@@ -46,19 +46,50 @@ class TinderDriver:
         "5529bb33506f1f908d4b995ea60c4f539415a7f4bd37e9da42330bc535c745c9" : "Gender"
     }
 
+    __element_xpath_identifiers: dict = {
+        "landing_page_login_btn" : [
+            "//a[@href='https://tinder.onelink.me/9K8a/3d4abb81' and @class='c1p6lbu0 Miw(120px)' and @data-size='medium']"
+            ],
+        "login_with_phone_btn" : [
+            "//button[@aria-label='Log in with phone number']"
+        ],
+        "phone_num_field" : [
+            "//input[@autocomplete='tel' and @name='phone_number' and @type='tel']"
+        ],
+        "proceed_btn" : [
+            "//button[contains(@class, 'c1p6lbu0') and @type='button'][.//descendant::*[text()='Next']]",
+            "//button[contains(@class, 'c1p6lbu0') and @type='button'][.//descendant::*[text()='Continue']]",
+            "//button[contains(@class, 'c1p6lbu0') and @type='button'][.//descendant::*[text()='Confirm email']]"
+        ],
+        "code_field" : [
+            "//input[@aria-label='OTP code digit 1' and @type='tel']"
+        ],
+        "location_perm_accept_btn" : [
+            "//button[contains(@class, 'c1p6lbu0') and @type='button'][.//descendant::*[text()='Allow']]"
+        ],
+        "notification_perm_deny_btn" : [
+            "//button[contains(@class, 'c1p6lbu0') and @type='button'][.//descendant::*[text()='I’ll miss out']]"
+        ]
+    }
+
     __home_url = "https://tinder.com/"
     
     def __init__(self) -> None:
         #Scope level constants
-        webdriver_path = "geckodriver.exe"
-        firefox_bin_path = "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
-        profile_path = "C:\\Users\\aruem\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\7czmkvtf.default-release"
-
+        webdriver_path = "./geckodriver"
+        firefox_bin_path = "/Applications/Firefox.app/Contents/Macos/firefox"
+        #profile_path = "C:\\Users\\aruem\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\7czmkvtf.default-release"
+        profile_path = "/Users/adamuremek/Library/Application Support/Firefox/Profiles/nlglewdi.default-release"
         
 
         #Configure Firefox options and driver
         firefox_options = Options()
-        firefox_options.binary_location = firefox_bin_path
+        #Allow access to location by default
+        firefox_options.set_preference("geo.enabled", True)
+        firefox_options.set_preference("geo.provider.use_corelocation", True)
+        firefox_options.set_preference("geo.prompt.testing", True)
+        firefox_options.set_preference("geo.prompt.testing.allow", True)
+        #firefox_options.binary_location = firefox_bin_path
         firefox_options.profile = profile_path
 
         service = Service(executable_path=webdriver_path)
@@ -149,6 +180,23 @@ class TinderDriver:
         # Move to the element, perform a key down and key up (release)
         actions.move_to_element(main_div).key_down(key_action).key_up(key_action).perform()
 
+    def __get_element(self, element_name: str, max_wait_time: int = 5) -> WebElement:
+        if element_name not in TinderDriver.__element_xpath_identifiers:
+            raise ValueError(f"'{element_name}' is not a defined element!")
+
+        wait = WebDriverWait(self.driver, max_wait_time)
+        for path in TinderDriver.__element_xpath_identifiers[element_name]:
+            try:
+                element = wait.until(
+                    EC.presence_of_element_located((By.XPATH, path))
+                )
+                return element
+            except:
+                continue
+
+            
+        raise Exception(f"Could not find element with paths given by {element_name}")
+
     def __get_element_content(self, xpath_str: str) -> str:
         try:
             element_div = self.driver.find_element(By.XPATH, xpath_str)
@@ -156,9 +204,13 @@ class TinderDriver:
         except:
             return ""
 
-    def __simulate_pause(self) -> None:
-        time.sleep(random.uniform(0.5, 1))
+    def __simulate_pause(self, duration: float=0.0) -> None:
+        if duration:
+            time.sleep(duration)
+        else:
+            time.sleep(random.uniform(0.5, 1))
 
+    #==Decorators==#
     def __enforce_open_profile(func):
         def wrapper(self, *args, **kwargs):
             if not self.profile_is_open:
@@ -307,6 +359,45 @@ class TinderDriver:
         print("Tinder driver shut down!")
 
     
+    def login(self) -> None:
+        self.__get_element("landing_page_login_btn").click()
+        #self.__simulate_pause(3.0)
+
+        self.__get_element("login_with_phone_btn").click()
+        #self.__simulate_pause(3.0)
+
+        self.__get_element("phone_num_field").send_keys("9897800239")
+        #self.__simulate_pause(3.0)
+
+        self.__get_element("proceed_btn").click()
+        #self.__simulate_pause(3.0)
+
+        auth_code = self.__get_element("code_field", 20)
+        code = input("Enter text verification code:\n")
+        auth_code.send_keys(code)
+        #self.__simulate_pause(3.0)
+        
+        self.__get_element("proceed_btn").click()
+        self.__simulate_pause(3.0)
+
+        auth_code = self.__get_element("code_field", 20)
+        auth_code.click()
+        code = input("Enter email verification code:\n")
+        auth_code.send_keys(code)
+        #self.__simulate_pause(3.0)
+
+        self.__get_element("proceed_btn").click()
+        #self.__simulate_pause(3.0)
+
+        self.__get_element("location_perm_accept_btn").click()
+        self.__simulate_pause(3.0)
+
+        self.__get_element("notification_perm_deny_btn").click()
+        #self.__simulate_pause(3.0)
+
+        print("Successfully logged in!")
+        
+
 
     def open_profile(self) -> None:
         self.__run_key_action(Keys.ARROW_UP)

@@ -63,6 +63,8 @@ if __name__ == "__main__":
             driver.like()
         elif user_in == "next_photo":
             driver.next_photo()
+        elif user_in == "login":
+            driver.login()
 
 
         elif user_in == "num":

@@ -76,10 +76,12 @@ class TinderDriver:
     
     def __init__(self) -> None:
         #Scope level constants
-        webdriver_path = "./geckodriver"
-        firefox_bin_path = "/Applications/Firefox.app/Contents/Macos/firefox"
-        #profile_path = "C:\\Users\\aruem\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\7czmkvtf.default-release"
-        profile_path = "/Users/adamuremek/Library/Application Support/Firefox/Profiles/nlglewdi.default-release"
+        #webdriver_path = "./geckodriver"
+        #profile_path = "/Users/adamuremek/Library/Application Support/Firefox/Profiles/nlglewdi.default-release"
+
+        webdriver_path = "./geckodriver.exe"
+        profile_path = "C:\\Users\\aruem\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\7czmkvtf.default-release"
+        firefox_bin_path = "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
         
 
         #Configure Firefox options and driver
@@ -89,7 +91,7 @@ class TinderDriver:
         firefox_options.set_preference("geo.provider.use_corelocation", True)
         firefox_options.set_preference("geo.prompt.testing", True)
         firefox_options.set_preference("geo.prompt.testing.allow", True)
-        #firefox_options.binary_location = firefox_bin_path
+        firefox_options.binary_location = firefox_bin_path
         firefox_options.profile = profile_path
 
         service = Service(executable_path=webdriver_path)

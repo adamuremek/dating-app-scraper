@@ -1,31 +1,7 @@
 import requests
 import json
 from Tinder import TinderDriver
-    
 
-
-def load_meta():
-    with open("./data/META.json", "r") as file:
-        #Parse the JSON file into a Python dicitonary
-        return json.load(file)
-    
-def save_meta(meta_json):
-    with open("./data/META.json", "w") as file:
-        # Serialize and save the JSON data
-        json.dump(meta_json, file, indent=4) # indent=4 for pretty printing
-    
-
-
-def download_img(img_url: str, img_name: str):
-    response = requests.get(img_url)
-
-    if response.status_code == 200:
-        with open(img_name, "wb") as file:
-            #write the content of the response into the file
-            file.write(response.content)
-            print(f"Image {img_name} dowloaded to data dir")
-    else:
-        print("Failed to get image")
 
 
         
@@ -39,9 +15,6 @@ if __name__ == "__main__":
     #TODO 1: Some photos can be a boomerang video with an mp4 link. find out how to get that.
     #TODO 2: Find way to scrape spotify
     #TODO 3: Find way to scrape instagram
-
-
-    meta = load_meta()
 
     user_in = ""
     img_url_set = set()
@@ -96,7 +69,6 @@ if __name__ == "__main__":
 
 
     print("no more harvesting :( sad")
-    
-    save_meta(meta)
+
 
     driver.quit()
